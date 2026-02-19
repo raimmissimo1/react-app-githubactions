@@ -1,0 +1,61 @@
+name: Deploy React App
+on:
+  push:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Repo code
+        uses: actions/checkout@v3
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~./npm
+          key: node-modules-${{ hashFiles('**/package-lock.json')  }}
+      - name: Install dependencies
+        run: npm install
+      - name: Test App
+        run: npm run test 
+  lint:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Get Repo code
+        uses: actions/checkout@v3
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~./npm
+          key: node-modules-${{ hashFiles('**/package-lock.json')  }}
+      - name: Install dependencies
+        run: npm install
+      - name: Lint application
+        run: npm run lint
+  build:
+    needs: lint
+    strategy:
+      matrix:
+        node-version: [14, 16]
+        os: [ubuntu-latest , windows-latest]
+    runs-on: ${{ matrix.os  }}
+    steps:
+      - name: Get Repo code
+        uses: actions/checkout@v3
+      - name: Install Node/js
+        uses: actions/setup-node@3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: npm install
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: ~./npm
+          key: node-modules-${{ hashFiles('**/package-lock.json')  }}
+      - name: Build App
+        run: npm run build
+      - name: Deploy
+        run: echo Deploying 
+    
